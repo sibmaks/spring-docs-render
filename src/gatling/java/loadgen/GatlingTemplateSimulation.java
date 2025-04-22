@@ -4,6 +4,7 @@ import io.gatling.javaapi.core.ScenarioBuilder;
 import io.gatling.javaapi.core.Simulation;
 import io.gatling.javaapi.http.HttpProtocolBuilder;
 
+import java.nio.file.Path;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,14 +31,14 @@ public class GatlingTemplateSimulation extends Simulation {
 
                             .exec(http("Create Template - #{scenario.templateFilePath}")
                                     .post("/api/template/")
-                                    .body(RawFileBody("data/templates/#{scenario.templateFilePath}"))
+                                    .body(RawFileBody(Path.of("data", "templates", "#{scenario.templateFilePath}").toString()))
                                     .asJson()
                                     .check(jsonPath("$").saveAs("templateId"))
                             )
 
                             .exec(http("Render Template with #{scenario.inputFilePath}")
                                     .post(session -> "/api/template/" + session.getString("templateId") + "/render")
-                                    .body(RawFileBody("data/input/#{scenario.inputFilePath}"))
+                                    .body(RawFileBody(Path.of("data", "input", "#{scenario.inputFilePath}").toString()))
                                     .asJson()
                             )
 
