@@ -47,7 +47,7 @@ public class GatlingTemplateSimulation extends Simulation {
                             })
 
                             .exec(http("Delete Template")
-                                    .delete(session -> "/api/template/" + session.getString("templateId") + "/")
+                                    .delete(session -> "/api/template/" + session.getString("templateId"))
                             )
             );
 
