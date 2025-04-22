@@ -30,6 +30,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
 
     implementation("net.sf.jasperreports:jasperreports:6.21.3")
+    implementation("net.sf.barcode4j:barcode4j:2.1")
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("org.apache.xmlgraphics:batik-bridge:1.18")
 
     compileOnly("org.projectlombok:lombok")
 
