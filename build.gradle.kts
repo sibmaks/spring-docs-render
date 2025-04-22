@@ -22,6 +22,8 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven(url = "https://nexus.sibmaks.ru/repository/maven-snapshots/")
+    maven(url = "https://nexus.sibmaks.ru/repository/maven-releases/")
 }
 
 dependencies {
@@ -30,6 +32,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
 
     implementation("net.sf.jasperreports:jasperreports:6.21.3")
+    implementation("io.github.sibmaks.spring-jfr:agent:0.0.29")
 
     compileOnly("org.projectlombok:lombok")
 
