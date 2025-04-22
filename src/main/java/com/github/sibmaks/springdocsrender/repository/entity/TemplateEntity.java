@@ -1,9 +1,9 @@
 package com.github.sibmaks.springdocsrender.repository.entity;
 
 import com.github.sibmaks.springdocsrender.api.template.TemplateEngine;
-import jakarta.persistence.*;
 import lombok.*;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
