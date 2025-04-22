@@ -1,14 +1,13 @@
 package loadgen;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.gatling.javaapi.core.ScenarioBuilder;
 import io.gatling.javaapi.core.Session;
 import io.gatling.javaapi.core.Simulation;
 import io.gatling.javaapi.http.HttpProtocolBuilder;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Queue;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -17,6 +16,7 @@ import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.http;
 
 public class GatlingTemplateSimulation extends Simulation {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final AtomicInteger totalRequests = new AtomicInteger(0);
     private static final int MAX_REQUESTS = 250_000;
     private static final Random rnd = new Random();
@@ -31,21 +31,40 @@ public class GatlingTemplateSimulation extends Simulation {
                     exec(session -> {
                         var scenarios = GatlingScenario.values();
                         var scenario = scenarios[rnd.nextInt(scenarios.length)];
-                        return session.set("scenario", scenario);
+                        var rq = Map.ofEntries(
+                                Map.entry("code", UUID.randomUUID().toString()),
+                                Map.entry("template", scenario.template),
+                                Map.entry("engine", "JASPER")
+                        );
+                        try {
+                            session = session.set("createRq", OBJECT_MAPPER.writeValueAsBytes(rq));
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        var inputModel = scenario.modelGenerator.apply(session);
+
+                        try {
+                            session = session.set("inputModel", OBJECT_MAPPER.writeValueAsBytes(inputModel));
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        return session;
                     })
                             .exec(beginTracing("startTimeCreate"))
-                            .exec(http("Create Template - #{scenario.templateFilePath}")
+                            .exec(http("Create Template")
                                     .post("/api/template/")
-                                    .body(RawFileBody(Path.of("data", "templates", "#{scenario.templateFilePath}").toString()))
+                                    .body(ByteArrayBody(session -> session.get("createRq")))
                                     .asJson()
                                     .check(jsonPath("$").saveAs("templateId"))
                             )
                             .exec(finishTracing("startTimeCreate"))
 
                             .exec(beginTracing("startTimeRender"))
-                            .exec(http("Render Template with #{scenario.inputFilePath}")
+                            .exec(http("Render Template")
                                     .post(session -> "/api/template/" + session.getString("templateId") + "/render")
-                                    .body(RawFileBody(Path.of("data", "input", "#{scenario.inputFilePath}").toString()))
+                                    .body(ByteArrayBody(session -> session.get("inputModel")))
                                     .asJson()
                             )
                             .exec(finishTracing("startTimeRender"))
