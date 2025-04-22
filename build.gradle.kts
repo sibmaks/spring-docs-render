@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.3.10"
     id("io.spring.dependency-management") version "1.1.7"
+    id("io.gatling.gradle") version "3.13.5.4"
 }
 
 group = "com.github.sibmaks"
@@ -45,4 +46,7 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+gatling {
 }
