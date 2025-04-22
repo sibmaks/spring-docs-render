@@ -16,4 +16,12 @@
 		<appender-ref ref="CONSOLE" />
 	</root>
 
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<file>logs/gatling.out</file>
+		<append>true</append>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
+		</encoder>
+	</appender>
+
 </configuration>
