@@ -26,6 +26,14 @@ repositories {
     maven(url = "https://nexus.sibmaks.ru/repository/maven-releases/")
 }
 
+dependencyManagement {
+    // for Gatling
+    imports {
+        mavenBom("com.fasterxml.jackson:jackson-bom:2.18.3")
+        mavenBom("io.netty:netty-bom:4.1.119.Final")
+    }
+}
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
