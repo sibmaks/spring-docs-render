@@ -29,10 +29,11 @@ public class RequestCachingFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
         long timing = System.currentTimeMillis() - startTime;
         logger.info(
-                String.format("Request [%s] to '%s' executed for %d ms",
+                String.format("Request [%s] to '%s' executed for %d ms, rs: %s",
                         request.getMethod(),
                         request.getRequestURL(),
-                        timing
+                        timing,
+                        response.getStatus()
                 )
         );
     }
