@@ -103,7 +103,7 @@ public class RequestStats implements Cloneable {
 
     @Override
     public String toString() {
-        return String.format("%-15d %-20.2f %-20.2f %-20.2f %-16.2f %-16.2f %-16.2f %-16.2f %-16.2f%n",
+        return String.format("%-15d %-20.2f %-20.2f %-20.2f %-16.2f %-16.2f %-16.2f %-16.2f %-16.2f",
                 getCount(),
                 getTotalTime().doubleValue(),
                 getAverageTime().doubleValue(),

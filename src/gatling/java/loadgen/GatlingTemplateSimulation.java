@@ -132,8 +132,7 @@ public class GatlingTemplateSimulation extends Simulation {
         };
 
         System.out.println("\n\u001B[1;34mREQUEST STATISTICS: ALL\u001B[0m");
-        System.out.printf("%-15s %-20s %-20s %-20s %-16s %-16s %-16s %-16s %-16s%n",
-                (Object[]) headers);
+        System.out.printf("%-15s %-20s %-20s %-20s %-16s %-16s %-16s %-16s %-16s%n", (Object[]) headers);
         System.out.println("-----------------------------------------------------------------------------------------------");
 
         for (var stat : stats) {
