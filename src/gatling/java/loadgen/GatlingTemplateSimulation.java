@@ -13,7 +13,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.*;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,7 +36,8 @@ public class GatlingTemplateSimulation extends Simulation {
             .build();
 
     private final Map<GatlingScenario, String> templateIds = new ConcurrentHashMap<>();
-    private final Queue<Long> requestTimes = new ConcurrentLinkedQueue<>();
+    private final Queue<String> stats = new ConcurrentLinkedQueue<>();
+    private final RequestStats requestStats = new RequestStats();
 
     private final HttpProtocolBuilder httpProtocol = http
             .baseUrl(BASE_URL)
@@ -87,22 +91,12 @@ public class GatlingTemplateSimulation extends Simulation {
 
     private void logRequestTime(long time) {
         totalRequests.incrementAndGet();
-        requestTimes.add(time);
+        requestStats.addRequest(time);
         int current = totalRequests.get();
         if (current % 10000 != 0) {
             return;
         }
-        System.out.println("\n== Stats at " + current + " requests ==");
-        var times = new ArrayList<>(requestTimes);
-
-        double avg = times.stream()
-                .mapToLong(Long::longValue)
-                .average()
-                .orElse(0.0);
-        double variance = times.stream()
-                .mapToDouble(t -> Math.pow(t - avg, 2))
-                .average().orElse(0.0);
-        System.out.printf("Avg: %.2f ms, Variance: %.2f\n", avg, variance);
+        stats.add(requestStats.toString());
     }
 
     @Override
@@ -131,6 +125,20 @@ public class GatlingTemplateSimulation extends Simulation {
     @Override
     public void after() {
         deleteAllTemplates();
+
+        String[] headers = {
+                "Total", "Total Time", "Avg Time", "Variance",
+                "P90", "P95", "P99", "Min", "Max"
+        };
+
+        System.out.println("\n\u001B[1;34mREQUEST STATISTICS: ALL\u001B[0m");
+        System.out.printf("%-15s %-20s %-20s %-20s %-16s %-16s %-16s %-16s %-16s%n",
+                (Object[]) headers);
+        System.out.println("-----------------------------------------------------------------------------------------------");
+
+        for (var stat : stats) {
+            System.out.println(stat);
+        }
     }
 
     private void deleteAllTemplates() {
