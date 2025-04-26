@@ -11,69 +11,68 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class RequestStats implements Cloneable {
     private final Queue<BigDecimal> values;
 
-    private BigDecimal totalTime = BigDecimal.ZERO;
-
     public RequestStats() {
         this.values = new ConcurrentLinkedQueue<>();
     }
 
-    public void addRequest(long time) {
-        var bigTime = new BigDecimal(BigInteger.valueOf(time), 12);
-        totalTime = totalTime.add(bigTime);
+    public synchronized void addRequest(long time) {
+        var bigTime = new BigDecimal(BigInteger.valueOf(time)).setScale(12, RoundingMode.HALF_DOWN);
         values.add(bigTime);
     }
 
-    public int getCount() {
-        return values.size();
+    public BigDecimal getTotalTime(int n) {
+        return values.stream()
+                .limit(n)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public BigDecimal getTotalTime() {
-        return totalTime;
-    }
-
-    public BigDecimal getAverageTime() {
-        var n = values.size();
+    public BigDecimal getAverageTime(int n) {
         if (n < 2) return BigDecimal.ZERO;
+
+        var totalTime = getTotalTime(n);
 
         return totalTime.divide(BigDecimal.valueOf(n), RoundingMode.HALF_DOWN);
     }
 
-    public BigDecimal getVariance() {
-        var n = values.size();
+    public BigDecimal getVariance(int n) {
         if (n < 2) return BigDecimal.ZERO;
 
         var sum = BigDecimal.ZERO;
         var sumSq = BigDecimal.ZERO;
 
-        for (var x : values) {
+        var iterator = values.stream()
+                .limit(n)
+                .iterator();
+        while (iterator.hasNext()) {
+            var x = iterator.next();
             sum = sum.add(x);
             sumSq = sumSq.add(x.pow(2));
         }
 
-        var mean = sum.divide(BigDecimal.valueOf(n), RoundingMode.HALF_DOWN);
-        return sumSq.divide(BigDecimal.valueOf(n), RoundingMode.HALF_DOWN)
+        var nDecimal = BigDecimal.valueOf(n);
+        var mean = sum.divide(nDecimal, RoundingMode.HALF_DOWN);
+        return sumSq.divide(nDecimal, RoundingMode.HALF_DOWN)
                 .subtract(mean.pow(2));
     }
 
-    public BigDecimal getPercentile90() {
-        return getPercentile(0.90);
+    public BigDecimal getPercentile90(int n) {
+        return getPercentile(n, 0.90);
     }
 
-    public BigDecimal getPercentile95() {
-        return getPercentile(0.95);
+    public BigDecimal getPercentile95(int n) {
+        return getPercentile(n, 0.95);
     }
 
-    public BigDecimal getPercentile99() {
-        return getPercentile(0.99);
+    public BigDecimal getPercentile99(int n) {
+        return getPercentile(n, 0.99);
     }
 
-    private BigDecimal getPercentile(double x) {
-        var n = values.size();
+    private BigDecimal getPercentile(int n, double x) {
         if (n == 0) {
             return BigDecimal.ZERO;
         }
 
-        var sorted = new ArrayList<>(values);
+        var sorted = new ArrayList<>(values.stream().limit(n).toList());
         Collections.sort(sorted);
         var index = (int) Math.ceil(x * n) - 1;
         index = Math.min(index, n - 1);
@@ -81,38 +80,37 @@ public class RequestStats implements Cloneable {
         return sorted.get(index);
     }
 
-    public BigDecimal getMin() {
-        var n = values.size();
+    public BigDecimal getMin(int n) {
         if (n == 0) {
             return BigDecimal.ZERO;
         }
         return values.stream()
+                .limit(n)
                 .min(BigDecimal::compareTo)
                 .orElse(BigDecimal.ZERO);
     }
 
-    public BigDecimal getMax() {
-        var n = values.size();
+    public BigDecimal getMax(int n) {
         if (n == 0) {
             return BigDecimal.ZERO;
         }
         return values.stream()
+                .limit(n)
                 .max(BigDecimal::compareTo)
                 .orElse(BigDecimal.ZERO);
     }
 
-    @Override
-    public String toString() {
+    public String toString(int n) {
         return String.format("%-15d %-20.2f %-20.2f %-20.2f %-16.2f %-16.2f %-16.2f %-16.2f %-16.2f",
-                getCount(),
-                getTotalTime().doubleValue(),
-                getAverageTime().doubleValue(),
-                getVariance().doubleValue(),
-                getPercentile90().doubleValue(),
-                getPercentile95().doubleValue(),
-                getPercentile99().doubleValue(),
-                getMin().doubleValue(),
-                getMax().doubleValue()
+                n,
+                getTotalTime(n).doubleValue(),
+                getAverageTime(n).doubleValue(),
+                getVariance(n).doubleValue(),
+                getPercentile90(n).doubleValue(),
+                getPercentile95(n).doubleValue(),
+                getPercentile99(n).doubleValue(),
+                getMin(n).doubleValue(),
+                getMax(n).doubleValue()
         );
     }
 }

@@ -90,13 +90,12 @@ public class GatlingTemplateSimulation extends Simulation {
     }
 
     private void logRequestTime(long time) {
-        totalRequests.incrementAndGet();
+        int current = totalRequests.incrementAndGet();
         requestStats.addRequest(time);
-        int current = totalRequests.get();
         if (current % 10000 != 0) {
             return;
         }
-        stats.add(requestStats.toString());
+        stats.add(requestStats.toString(current));
     }
 
     @Override
